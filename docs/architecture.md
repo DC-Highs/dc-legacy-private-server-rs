@@ -142,3 +142,22 @@ kept from the original client; it is `enums::sse::GAME_SAVED`.
   same cookie.
 - **Passwords with Argon2id and sessions stored as hashes**: a database leak does not leak
   logins.
+
+## Performance
+
+Measured with `examples/bench.rs` on a Windows laptop, release build, against PostgreSQL and
+MongoDB containers in Docker Desktop (so every database round trip costs 1-3 ms):
+
+| Scenario (one player) | Throughput | Latency p50 |
+|---|---|---|
+| `packet.php`, 2 commands, 1 connection | ~300 req/s | 3 ms |
+| `get_player_info`, 64 connections | ~280 req/s | 235 ms (queued on the player's lock) |
+| Request answered without touching a database (rate-limited packet) | ~29,000 req/s at 16 connections | 0.1-0.4 ms |
+
+What the numbers say: the server itself adds well under a millisecond per request; what is left
+is the database round trips (one `find` to load the save, one `update` to write it) and the
+per-player lock, which serializes one player's requests on purpose. Different players run in
+parallel. The things done to keep database trips down: the game config is parsed once and its
+signed form cached, logins are cached for 10 s, a save is only written when a packet changed it,
+and queued assists cost no query unless the player has any. I have not run the Python version on
+the same machine, so there is no measured speed-up to quote.

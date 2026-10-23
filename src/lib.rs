@@ -1,0 +1,21 @@
+//! Dragon City Legacy Server: a replacement back end for the original Flash game.
+pub mod api;
+pub mod app;
+pub mod auth;
+pub mod commands;
+pub mod config;
+pub mod db;
+pub mod enums;
+pub mod error;
+pub mod friends;
+pub mod game;
+pub mod game_versions;
+pub mod gamedata;
+pub mod json;
+pub mod names;
+pub mod routes;
+pub mod security;
+pub mod state;
+pub mod storage;
+pub mod system_accounts;
+pub mod util;

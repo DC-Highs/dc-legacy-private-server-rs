@@ -1,0 +1,11 @@
+//! Game rules shared by the command handlers and the HTTP routes.
+pub mod black_market;
+pub mod breeding;
+pub mod combat;
+pub mod dragonarium;
+pub mod inventory;
+pub mod levels;
+pub mod map_items;
+pub mod market;
+pub mod pvp;
+pub mod training;

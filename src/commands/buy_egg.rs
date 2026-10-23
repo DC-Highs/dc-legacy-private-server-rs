@@ -12,14 +12,17 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
 
     let item_cfg = ctx.item_config(&Value::from(dragon_id))?;
     let costs = get(item_cfg, "costs");
+
     if get(item_cfg, "group_type").as_str() != Some(group::DRAGON) {
         return reject(format!("item {dragon_id} is not a dragon"));
     }
+
     if !truthy(costs) {
         return reject(format!("dragon {dragon_id} is not for sale"));
     }
 
     let (gold, cash, food) = cost_of(costs);
+    
     ctx.pay(gold, cash, food)?;
     ctx.add_resource(Resource::Xp, int_or(get(item_cfg, "xp"), 0));
 

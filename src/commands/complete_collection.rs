@@ -8,6 +8,7 @@ const COLLECTION_ACHIEVEMENT_POINTS: i64 = 75;
 
 pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     let collection_id = ctx.int_arg(0, "collection id", 0, 100_000)?;
+
     let collection = ctx
         .config
         .section("collections")
@@ -22,10 +23,12 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     }
 
     let owned = get(ctx.map_ref(), "ownedDragons");
+
     let missing: Vec<String> = get(collection, "dragon_ids")
         .as_array()
         .map(|ids| ids.iter().map(id_text).filter(|id| owned.get(id.as_str()).is_none()).collect())
         .unwrap_or_default();
+    
     if !missing.is_empty() {
         return reject(format!("collection {collection_id} is incomplete, missing dragons {missing:?}"));
     }

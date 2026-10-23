@@ -26,6 +26,7 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
 
     let mut started = None;
     let mut crop_set = None;
+
     if group_type == group::FARM || has_property(properties, "multiCollectable") {
         if crop > 0 {
             let prices = ctx.config.global("COLLECT_PRICE").as_array().cloned().unwrap_or_default();
@@ -48,11 +49,14 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
 
     let item = ctx.map_item(&iso_id)?;
     let attrs = attrs_mut(item, json!({}));
+
     if let Some(crop) = crop_set {
         attrs.insert("cp".into(), Value::from(crop));
     }
+
     if let Some(started) = started {
         set_at(item, 3, started)?;
     }
+    
     Ok(())
 }

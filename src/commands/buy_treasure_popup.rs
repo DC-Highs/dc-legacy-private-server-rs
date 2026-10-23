@@ -16,9 +16,11 @@ fn popup_treasure(id: i64) -> Option<(Resource, i64, i64)> {
 
 pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     let treasure_id = ctx.int_arg(0, "treasure id", 0, 100_000)?;
+    
     let Some((resource, amount, price)) = popup_treasure(treasure_id) else {
         return reject(format!("treasure id {treasure_id} is not registered on the server"));
     };
+
     ctx.pay_cash(price)?;
     ctx.add_resource(resource, amount);
     Ok(())

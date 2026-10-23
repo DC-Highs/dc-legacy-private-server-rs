@@ -11,17 +11,21 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     if target_id == ctx.user_id {
         return reject("a player cannot assist themselves");
     }
+
     if !friends::are_friends(ctx.state, ctx.user_id, target_id).await? {
         return reject(format!("{target_id} is not one of the player's neighbours"));
     }
+
     if !ctx.state.storage.player_exists(target_id).await? {
         return reject(format!("neighbor {target_id} does not exist"));
     }
 
     let clicks = parse_json_text(&raw_clicks, "clicks")?;
+    
     let Some(list) = clicks.as_array().filter(|c| !c.is_empty() && c.len() <= MAX_CLICKS_PER_ASSIST) else {
         return reject(format!("clicks must be a list of 1 to {MAX_CLICKS_PER_ASSIST} entries"));
     };
+
     check_json_depth(&clicks, "clicks", 2, MAX_CLICKS_PER_ASSIST * 4)?;
 
     ctx.state.storage.add_pending_assist(target_id, ctx.user_id, list).await?;

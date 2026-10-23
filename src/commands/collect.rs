@@ -16,6 +16,7 @@ const CROP_TIME_TOLERANCE: i64 = 5;
 
 fn habitat_gold_cap(ctx: &Ctx<'_>, iso_id: &str, now: i64) -> i64 {
     let mut rate_per_minute = 0.0;
+
     for dragon in ctx.map_ref().get("dragons").and_then(Value::as_array).into_iter().flatten() {
         if id_text(get(dragon, "habitatId")) != iso_id {
             continue;
@@ -37,9 +38,11 @@ fn habitat_gold_cap(ctx: &Ctx<'_>, iso_id: &str, now: i64) -> i64 {
 fn allow_tutorial_harvest_once(ctx: &mut Ctx<'_>, iso_id: &str) -> CmdResult<()> {
     let completed = ctx.info_ref().get("completed_tutorial").map(id_text).unwrap_or_else(|| "0".to_string());
     let in_tutorial = completed == "0" || completed.is_empty();
+
     if !in_tutorial || truthy(get(ctx.private_ref(), "tutorialCropHarvested")) {
         return reject(format!("the crop on farm {iso_id} is not ready yet"));
     }
+
     ctx.private_state().insert("tutorialCropHarvested".into(), Value::Bool(true));
     Ok(())
 }
@@ -53,6 +56,7 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     let now = now_ts();
 
     attrs_mut(ctx.map_item(&iso_id)?, json!({}));
+
     let type_id = ctx.map_item(&iso_id)?.first().cloned().unwrap_or(Value::Null);
     let group_is_habitat = ctx.config.item(&type_id).map(|c| get(c, "group_type").as_str() == Some(group::HABITAT)).unwrap_or(false);
 
@@ -63,21 +67,25 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
         if !group_is_habitat {
             return reject(format!("object {iso_id} is not a habitat"));
         }
+
         let claimed = ctx.int_arg(1, "gold collected", 0, MAX_SAFE_INT)?;
         let cap = habitat_gold_cap(ctx, &iso_id, now);
         let collected = claimed.min(cap);
+
         if collected < claimed {
             tracing::warn!(
                 "Player {} claimed {claimed} gold from habitat {iso_id} but at most {cap} was produced",
                 ctx.user_id
             );
         }
+
         ctx.add_resource(Resource::Gold, collected);
         let item = ctx.map_item(&iso_id)?;
         set_at(item, 3, now)?;
         attrs_mut(item, json!({})).insert("lat".into(), Value::from(now));
     } else if second.and_then(Value::as_str) == Some("fc") {
         let crop = get(get(get(ctx.map_ref(), "items"), &iso_id).get(ATTRIBUTES_INDEX).unwrap_or(&Value::Null), "cp").clone();
+
         if !crop.is_null() {
             let crop_index = int_or(&crop, 0) - 1;
             let values = ctx.config.global("COLLECT_VALUES").as_array().cloned().unwrap_or_default();
@@ -86,24 +94,30 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
 
             if crop_index >= 0 && (crop_index as usize) < values.len() {
                 let index = crop_index as usize;
+
                 if let Some(grow_minutes) = minutes.get(index) {
                     let started = int_or(get_item_field(ctx, &iso_id, 3), 0);
                     let needed = (f64_or(grow_minutes, 0.0) * 60.0) as i64;
+
                     if now - started + CROP_TIME_TOLERANCE < needed {
                         allow_tutorial_harvest_once(ctx, &iso_id)?;
                     }
                 }
+
                 let Some(xp) = xps.get(index) else { return fail("COLLECT_XP has no entry for this crop") };
+
                 ctx.add_resource(Resource::Food, int_or(&values[index], 0));
                 ctx.add_resource(Resource::Xp, int_or(xp, 0));
             }
             attrs_mut(ctx.map_item(&iso_id)?, json!({})).remove("cp");
         }
+        
         set_at(ctx.map_item(&iso_id)?, 3, 0)?;
     } else {
         let item = ctx.map_item(&iso_id)?;
         set_at(item, 3, 0)?;
         let attrs = attrs_mut(item, json!({}));
+
         if attrs.contains_key("lat") {
             attrs.insert("lat".into(), Value::from(now));
         }

@@ -20,13 +20,17 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     if group_type == group::DRAGON {
         return reject(format!("item {item_id} is a dragon, eggs are bought with buy_egg"));
     }
+
     if !truthy(costs) {
         return reject(format!("item {item_id} is not for sale"));
     }
+
     if ctx.has_map_item(&iso_id) {
         return reject(format!("iso id {iso_id} is already used by another object"));
     }
+
     let min_level = int_or(get(item_cfg, "min_level"), 1);
+
     if min_level > int_or(get(ctx.info_ref(), "level"), 1) {
         return reject(format!("item {item_id} requires level {min_level}"));
     }
@@ -37,10 +41,12 @@ pub async fn run(ctx: &mut Ctx<'_>) -> CmdResult<()> {
     let build_time = int_or(get(item_cfg, "build_time"), 0);
     let current_ts = ctx.server_ts();
     let mut attributes = serde_json::Map::new();
+
     if group_type == group::HABITAT {
         attributes.insert("ar".into(), Value::from(0));
         attributes.insert("lat".into(), Value::from(current_ts));
     }
+    
     if build_time > 0 {
         attributes.insert("tb".into(), Value::from(current_ts + build_time));
     } else {

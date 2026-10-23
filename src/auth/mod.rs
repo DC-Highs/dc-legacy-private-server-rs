@@ -1,4 +1,3 @@
-//! Accounts, passwords and login sessions, plus the request middleware that identifies the
 use std::net::SocketAddr;
 
 use axum::extract::{ConnectInfo, FromRequestParts, Request, State};

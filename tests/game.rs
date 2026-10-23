@@ -1,4 +1,3 @@
-//! The client is untrusted: every way of injecting resources or breaking the save must fail.
 mod common;
 
 use axum::http::{Method, StatusCode};

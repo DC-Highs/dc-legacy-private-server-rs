@@ -1,4 +1,3 @@
-//! Game files served to the logged-in web client, plus the built single-page app.
 use std::path::{Component, Path as FsPath, PathBuf};
 
 use axum::extract::{Path, Request, State};

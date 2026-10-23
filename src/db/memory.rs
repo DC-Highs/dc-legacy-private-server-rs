@@ -1,4 +1,3 @@
-//! In-memory implementations of the stores, used by the tests (no PostgreSQL or MongoDB needed).
 use std::collections::{BTreeMap, HashMap};
 
 use async_trait::async_trait;

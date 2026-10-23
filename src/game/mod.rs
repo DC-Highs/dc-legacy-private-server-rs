@@ -1,4 +1,3 @@
-//! Game rules shared by the command handlers and the HTTP routes.
 pub mod black_market;
 pub mod breeding;
 pub mod combat;

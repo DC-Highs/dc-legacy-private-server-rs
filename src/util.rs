@@ -1,4 +1,3 @@
-//! Small helpers shared across the server.
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;

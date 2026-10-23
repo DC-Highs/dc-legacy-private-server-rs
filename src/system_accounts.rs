@@ -1,4 +1,3 @@
-//! Accounts that belong to the game itself, not to a person.
 use crate::auth::passwords::hash_password_async;
 use crate::config::DEUS_PLAYER_ID;
 use crate::db::{NewUser, User};

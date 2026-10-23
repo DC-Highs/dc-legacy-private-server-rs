@@ -1,4 +1,3 @@
-//! Signed JSON endpoints under `/static/dragoncity/srv`, tracking stubs and the SSE stream.
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::time::Duration;

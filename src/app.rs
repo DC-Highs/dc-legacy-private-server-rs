@@ -1,4 +1,3 @@
-//! Assembles the application: router, start-up tasks and the in-memory variant used by tests.
 use std::sync::Arc;
 use std::time::Duration;
 

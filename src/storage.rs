@@ -1,4 +1,3 @@
-//! Persistence of player state on top of a `PlayerStore`, plus the per-player locks.
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

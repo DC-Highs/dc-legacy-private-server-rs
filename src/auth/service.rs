@@ -1,4 +1,3 @@
-//! Account and session operations.
 use std::str::FromStr;
 use std::sync::OnceLock;
 use std::time::Instant;

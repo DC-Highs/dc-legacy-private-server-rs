@@ -1,4 +1,3 @@
-//! The `packet.php` endpoint: applies batched client commands to the logged-in player's save.
 use std::time::Duration;
 
 use axum::body::Bytes;

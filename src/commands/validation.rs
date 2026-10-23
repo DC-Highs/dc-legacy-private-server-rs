@@ -1,4 +1,3 @@
-//! Validation of the untrusted arguments the client sends with each command.
 use serde_json::Value;
 
 pub const MAX_SAFE_INT: i64 = 1 << 53;

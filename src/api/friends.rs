@@ -1,4 +1,3 @@
-//! Friend requests between players (the friends become neighbours in the game).
 use std::collections::HashMap;
 use std::time::Duration;
 

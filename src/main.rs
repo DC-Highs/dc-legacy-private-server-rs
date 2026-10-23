@@ -1,4 +1,3 @@
-//! Command line: `dragon-city <serve|migrate|create-admin|seed>`.
 use std::net::SocketAddr;
 use std::process::ExitCode;
 use std::sync::Arc;

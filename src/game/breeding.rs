@@ -1,4 +1,3 @@
-//! Breeding engine: decides which dragon a pair of parents produces.
 use std::collections::{BTreeSet, HashMap};
 
 use rand::seq::IndexedRandom;

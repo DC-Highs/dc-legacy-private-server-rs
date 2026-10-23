@@ -1,4 +1,3 @@
-//! The game client versions (SWF files) in `flash/versions`, and which one is served.
 use serde_json::{json, Value};
 
 use crate::error::ApiResult;

@@ -1,4 +1,3 @@
-//! JSON helpers: Python-compatible serialization (the packets are signed) and forgiving
 use std::io;
 
 use serde::Serialize;

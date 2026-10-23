@@ -1,4 +1,3 @@
-//! PvP opponents (stored next to the saves) and their generation.
 use std::collections::HashMap;
 
 use rand::seq::IndexedRandom;

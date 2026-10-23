@@ -1,4 +1,3 @@
-//! Test helpers: an in-memory application (no PostgreSQL or MongoDB) and a small HTTP client
 #![allow(dead_code)]
 use std::collections::HashMap;
 use std::sync::Arc;

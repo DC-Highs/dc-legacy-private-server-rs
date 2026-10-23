@@ -1,4 +1,3 @@
-//! Black market ("Kompu") boxes and offers.
 use rand::seq::{IndexedRandom, SliceRandom};
 use rand::Rng;
 use serde_json::{json, Map, Value};

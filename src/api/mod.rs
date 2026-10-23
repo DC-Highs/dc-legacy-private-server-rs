@@ -1,4 +1,3 @@
-//! JSON API used by the web client and the admin panel.
 use std::collections::BTreeMap;
 
 use axum::body::Bytes;

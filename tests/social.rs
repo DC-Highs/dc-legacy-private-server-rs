@@ -1,4 +1,3 @@
-//! Friends and neighbours, friend requests, the new-friend gems, the Allies Market and
 mod common;
 
 use axum::http::StatusCode;

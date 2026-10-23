@@ -1,4 +1,3 @@
-//! Errors that are turned into JSON responses by the API layer.
 use std::collections::BTreeMap;
 
 use axum::http::StatusCode;

@@ -1,5 +1,3 @@
-//! Dragon level rules.
-
 pub const MAX_DRAGON_LEVEL: i64 = 40;
 
 pub fn level_from_xp(xp: i64) -> i64 {

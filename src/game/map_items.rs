@@ -1,4 +1,3 @@
-//! Helpers for the items placed on the player's map.
 use serde_json::Value;
 
 const ATTRIBUTES_INDEX: usize = 6;

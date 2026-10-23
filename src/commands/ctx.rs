@@ -1,4 +1,3 @@
-//! The context command handlers run with.
 use serde_json::{Map, Value};
 
 use super::validation::{

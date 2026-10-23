@@ -1,4 +1,3 @@
-//! Shared application state and the in-memory pieces that live next to it.
 use std::ops::Deref;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

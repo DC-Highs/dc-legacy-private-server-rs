@@ -1,4 +1,3 @@
-//! Register, login, logout and the current user.
 use std::time::Duration;
 
 use axum::extract::State;

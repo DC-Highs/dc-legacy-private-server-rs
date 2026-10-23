@@ -1,4 +1,3 @@
-//! Data the web client needs to start the Flash game, and the liveness probe.
 use axum::extract::State;
 use axum::routing::get;
 use axum::{Json, Router};

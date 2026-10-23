@@ -1,5 +1,3 @@
-//! Name pools used when generating dragons and PvP opponents.
-
 pub const DRAGON_NAMES: &[&str] = &[
     "Roxy", "Horacio", "Sergi", "Kasia", "Xavi", "Draco", "Ignis", "Gabriel", "Abdona", "Adolfina",
     "Agripina", "Aleja", "Altagracia", "Amadora", "Amelia", "Anatolia", "Aniceta", "Antolina",

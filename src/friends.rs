@@ -1,4 +1,3 @@
-//! Friendships between accounts. In the game they are the player's neighbours.
 use std::collections::HashMap;
 
 use chrono::{Duration, Utc};

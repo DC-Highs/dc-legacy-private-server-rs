@@ -1,4 +1,3 @@
-//! Packet signing.
 use hmac::{Hmac, Mac};
 use serde::Serialize;
 use sha2::Sha256;

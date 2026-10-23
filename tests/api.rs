@@ -1,4 +1,3 @@
-//! Accounts, sessions, CSRF, the web client, Deus, the admin API and the game versions.
 mod common;
 
 use axum::http::StatusCode;

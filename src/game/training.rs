@@ -1,4 +1,3 @@
-//! Dragon attack training helpers.
 use serde_json::Value;
 
 use crate::gamedata::PlayerConfig;

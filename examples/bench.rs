@@ -1,4 +1,3 @@
-//! A small load generator for a running server: `cargo run --release --example bench -- <host:port>`.
 use std::time::{Duration, Instant};
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};

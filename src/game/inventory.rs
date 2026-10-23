@@ -1,4 +1,3 @@
-//! Helpers for the player's storage, gifts and owned-dragon book.
 use serde_json::{json, Value};
 
 use crate::json::{as_int, get, id_text, int_or};

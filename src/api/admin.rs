@@ -1,4 +1,3 @@
-//! Administration API: manage accounts and their game saves.
 use std::collections::HashMap;
 
 use axum::extract::{Path, Query, State};

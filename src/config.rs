@@ -1,4 +1,3 @@
-//! Settings (read from environment variables) and constants shared across the server.
 use std::collections::HashMap;
 use std::path::PathBuf;
 

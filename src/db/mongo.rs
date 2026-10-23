@@ -1,4 +1,3 @@
-//! MongoDB implementation of the player store (saves, PvP opponents, pending assists).
 use std::collections::HashMap;
 use std::time::Duration;
 

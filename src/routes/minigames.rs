@@ -1,4 +1,3 @@
-//! Minigame rewards.
 use axum::extract::State;
 use axum::routing::post;
 use axum::{Json, Router};

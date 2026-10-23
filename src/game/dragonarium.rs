@@ -1,4 +1,3 @@
-//! Dragonarium helpers.
 use serde_json::{Map, Value};
 
 use crate::enums::{attr, DragonariumTab};

@@ -1,5 +1,3 @@
-//! Enumerations for the wire protocol and the game data the server understands.
-
 macro_rules! commands {
     ($($variant:ident => $wire:literal),* $(,)?) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

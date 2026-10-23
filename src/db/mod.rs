@@ -1,4 +1,3 @@
-//! Database layer: PostgreSQL (accounts, sessions, friendships) and MongoDB (game state).
 use std::collections::HashMap;
 
 use async_trait::async_trait;

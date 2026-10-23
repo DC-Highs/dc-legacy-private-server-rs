@@ -1,4 +1,3 @@
-//! The `packet.php` commands and the dispatcher that applies them to a player's save.
 use serde_json::{json, Map, Value};
 
 use crate::enums::Command;

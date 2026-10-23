@@ -1,4 +1,3 @@
-//! The read-only game data: the game config and the new-player template, both shipped as JSON
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;

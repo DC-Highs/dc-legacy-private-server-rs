@@ -1,4 +1,3 @@
-//! Combat bookkeeping shared by tournaments and PvP.
 use std::collections::HashMap;
 
 use serde_json::Value;

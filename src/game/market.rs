@@ -1,4 +1,3 @@
-//! Achievement-points market: rotating offers paid with achievement points.
 use std::collections::HashSet;
 
 use rand::seq::IndexedRandom;

@@ -2,7 +2,7 @@
 
 The server is configured with environment variables. With Docker Compose you set them in a
 `.env` file next to `compose.yaml` (start from `.env.example`); compose passes the right ones
-to the containers. The code reads them in `src/config.py`.
+to the containers. The code reads them in `src/config.rs`.
 
 ## Compose variables (`.env`)
 
@@ -31,11 +31,13 @@ server without compose.
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | built from `POSTGRES_*` | SQLAlchemy URL, e.g. `postgresql+psycopg://user:pass@host:5432/db`. |
-| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | `localhost`, `5432`, `dragon`, `dragon`, `dragoncity` | Used to build the URL when `DATABASE_URL` is empty (special characters in the password are escaped for you). |
+| `DATABASE_URL` | built from `POSTGRES_*` | PostgreSQL URL, e.g. `postgres://user:pass@host:5432/db` (the old `postgresql+psycopg://` form is accepted too). |
+| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | `localhost`, `5432`, `dragon`, `dragon`, `dragoncity` | Used to build the URL when `DATABASE_URL` is empty (no escaping needed for special characters in the password). |
 | `MONGO_URL` | `mongodb://localhost:27017` | MongoDB connection string (without credentials). |
 | `MONGO_USER`, `MONGO_PASSWORD` | empty | MongoDB credentials, authenticated against the `admin` database. |
 | `MONGO_DB` | `dragoncity` | Database name. |
+| `DISABLE_RATE_LIMITS` | `false` | `true` turns every rate limit off. **For load tests only** (`examples/bench.rs`); never on a public server. |
+| `BIND_ADDR` | `0.0.0.0:8080` | Address and port the server listens on. |
 | `SEED_DIR` | `web/srv` (image: `/app/seed`) | Read-only seed data: game config, player template, PvP opponents. |
 | `FLASH_DIR` | `flash` (image: `/data/flash`) | The Flash files: `DCLoader.swf` and the clients in `versions/`. |
 | `ASSETS_DIR` | `assets` (image: `/data/assets`) | Game assets (sprites, sounds, fonts). |
@@ -66,7 +68,7 @@ The small seed files in `web/srv/` *are* copied into the image:
 
 | Where | What |
 |---|---|
-| `config.py` `SECRET_KEY` | The HMAC key the Flash client uses to verify signed packets. It ships inside the SWF, so it is not a secret. |
-| `config.py` `PVP_PAGE_SIZE` | Opponents per league page (8). |
-| `commands/collect.py` `GOLD_TOLERANCE` | Margin for the habitat gold check (see [SECURITY.md](SECURITY.md)). |
-| `docker/gunicorn.conf.py` | One worker, 128 threads (see [architecture.md](architecture.md)). |
+| `config.rs` `SECRET_KEY` | The HMAC key the Flash client uses to verify signed packets. It ships inside the SWF, so it is not a secret. |
+| `config.rs` `PVP_PAGE_SIZE` | Opponents per league page (8). |
+| `commands/buildings.rs` `GOLD_TOLERANCE` | Margin for the habitat gold check (see [SECURITY.md](SECURITY.md)). |
+| `main.rs` | One process; the tokio runtime uses every core (see [architecture.md](architecture.md)). |

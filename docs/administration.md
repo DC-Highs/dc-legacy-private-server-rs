@@ -66,15 +66,16 @@ same 5 gems.
 
 ## Command line
 
-Run these inside the app container (`docker compose exec app ...`) or, without Docker, with
-`poetry run dragon-city ...`.
+Run these inside the app container (`docker compose exec app /app/dragon-city ...`) or, without
+Docker, with `cargo run --release -- ...` (or the `dragon-city` binary).
 
 | Command | Purpose |
 |---|---|
-| `python -m src create-admin --email E --password P` | Create an administrator (or return the existing account with that email). |
-| `python -m src migrate` | Apply the PostgreSQL migrations (the container does this on start). |
-| `python -m src seed` | Import the bundled PvP opponents if the database has none. |
-| `python -m src serve` | Development server on `127.0.0.1:8080` (production uses gunicorn). |
+| `dragon-city create-admin --email E --password P` | Create an administrator (or return the existing account with that email). |
+| `dragon-city migrate` | Apply the PostgreSQL migrations (`serve` does this on start). |
+| `dragon-city seed` | Import the bundled PvP opponents if the database has none. |
+| `dragon-city serve` | Run the server (the default command) on `BIND_ADDR`, `0.0.0.0:8080` by default. |
+| `dragon-city healthcheck` | Exit with 0 when a running server answers `/api/game/health` (the container's `HEALTHCHECK`). |
 
 ## PvP opponents
 
@@ -92,7 +93,7 @@ names, levels and teams per call.
 | `Rejected <cmd> from player <id>: <reason>` | Validation refused it; the save was not changed. |
 | `Command <cmd> (number N) failed` (with a traceback) | An unexpected error; the command was rolled back. Please report it. |
 | `Command <cmd> is not implemented, ...` | The client sent a command this server does not handle yet. |
-| `Player <id> claimed X gold from habitat ... but at most Y was produced` | The habitat gold estimate clipped a collection. If this happens to honest players, raise `GOLD_TOLERANCE` in `commands/collect.py`. |
+| `Player <id> claimed X gold from habitat ... but at most Y was produced` | The habitat gold estimate clipped a collection. If this happens to honest players, raise `GOLD_TOLERANCE` in `commands/buildings.rs`. |
 
 Set `LOG_LEVEL=DEBUG` for more detail.
 

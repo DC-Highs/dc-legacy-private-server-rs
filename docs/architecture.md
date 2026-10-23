@@ -8,7 +8,7 @@
  └── Ruffle (Flash game) ── legacy ─►  /static/dragoncity/srv/*, /flash, /assets, /stream
                                           │
                                           ▼
-                              Flask app (gunicorn, 1 process)
+                              axum app (tokio, 1 process)
                               ├── auth/      sessions, CSRF/origin check
                               ├── api/       JSON API
                               ├── routes/    original game endpoints
@@ -42,19 +42,19 @@ The player is always the logged-in account. The cookie `dc_session` identifies t
 account id (`users.id`, a number starting at 200,000,000) is also the in-game player id
 (`fb_sig_user`). Ids the Flash client sends (`USERID`, `id`) are ignored.
 
-Request pipeline (`auth/context.py`), for every request:
+Request pipeline (`auth/mod.rs`, `request_context`), for every request:
 
 1. **Origin check** for `POST/PUT/PATCH/DELETE`: if the browser sends `Origin` (or `Referer`),
    it must match the request host or `ALLOWED_ORIGINS`; otherwise `403`.
 2. **Load the user** from the cookie (`sessions` → `users`). Expired or disabled accounts are
    treated as logged out.
-3. The view runs; `@login_required` / `@admin_required` enforce access.
+3. The handler runs; the `Login` / `Admin` extractors enforce access.
 4. Security headers are added (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and
    `Cache-Control: no-store` for `/api/*`).
 
 ## Data
 
-### PostgreSQL (SQLAlchemy, Alembic)
+### PostgreSQL (sqlx)
 
 | Table | Columns |
 |---|---|
@@ -62,10 +62,11 @@ Request pipeline (`auth/context.py`), for every request:
 | `friendships` | `low_id` < `high_id` (the pair is stored once, so it cannot be duplicated in the other direction), `requester_id`, `status` (`accepted` today; `pending` is reserved for the request flow), `created_at`, `responded_at`. Cascades when an account is deleted. |
 | `sessions` | `token_hash` (SHA-256 of the cookie token, primary key), `user_id` (cascade delete), `created_at`, `last_seen_at`, `expires_at`, `ip`, `user_agent` |
 
-Schema changes go through migrations in `src/migrations/versions/`, applied by
-`python -m src migrate` (the container does it on every start).
+Schema changes go through the SQL files in `migrations/`, applied by `dragon-city migrate`
+(`serve` does it on every start). They are written with `IF NOT EXISTS`, so a database created
+by the previous (Python/Alembic) version is adopted as it is.
 
-### MongoDB (pymongo)
+### MongoDB (the official `mongodb` driver)
 
 | Collection | Documents |
 |---|---|
@@ -75,8 +76,8 @@ Schema changes go through migrations in `src/migrations/versions/`, applied by
 | `pending_assists` | `target`, `helper`, `clicks`, `at`: neighbour assists waiting to be merged into the target's save. |
 
 The game configuration (items, levels, goals, ...) is **not** in a database: it is a large,
-read-only file loaded once per process (`storage.load_base_config`). Only the black-market
-offers differ per player.
+read-only file loaded once at start-up (`gamedata.rs`), indexed by item id, and its signed form is
+cached. Only the black-market offers differ per player.
 
 ## Request flow of `packet.php`
 
@@ -90,7 +91,8 @@ the signature is ignored, its key ships in the SWF).
    - looks up the handler (unknown commands get a generic `ok`);
    - takes a snapshot of the save;
    - validates the argument list, then calls the handler;
-   - on `CommandRejected` or any exception it restores the snapshot and logs it;
+   - on a rejection (`CommandError::Rejected`) or a failure (`CommandError::Failed`, what used to
+     be an exception) it restores the snapshot and logs it;
    - appends the response entry with the player's resources after the command.
 4. The save is written back, the lock released, and the player's event stream is told the game
    was saved.
@@ -98,30 +100,33 @@ the signature is ignored, its key ships in the SWF).
 
 ## Concurrency
 
-- Read-modify-write cycles on a save run under `storage.player_lock(player_id)`.
+- Read-modify-write cycles on a save run under `Storage::lock(player_id)` (an async mutex per
+  player, forgotten when nobody holds or awaits it).
 - A neighbour's assist never edits another player's save: it is queued in `pending_assists` and
   merged when the target next loads their save. No two requests rewrite the same save at once.
-- The lock, the SSE channels (`state.py`) and the rate limiter are **in process memory**, which
-  is why the server runs a single gunicorn worker with many threads. See
-  [deployment.md](deployment.md).
+- The lock, the SSE channels (`state.rs`), the rate limiter and the login cache are **in process
+  memory**, which is why the server must run as a single process (one container, no replicas).
+  Inside that process the async runtime uses every CPU core. See [deployment.md](deployment.md).
 
 ## Live "Saved" notifications
 
 `GET /stream` is a Server-Sent Events stream, one per open game tab. After each saved packet
 the server sends `JUEGO_GUARDADO`; the web client shows a short "Saved" hint in the header. A
 `PING` is sent every 20 seconds to keep the connection open. The literal `JUEGO_GUARDADO` is
-kept from the original client; it is the `SseEvent.GAME_SAVED` enum.
+kept from the original client; it is `enums::sse::GAME_SAVED`.
 
 ## Code organisation
 
-| Package | Responsibility |
+| Module | Responsibility |
 |---|---|
-| `commands/` | One module per command; `base.py` holds the registry and `CommandContext`; `validation.py` the argument checks; `dispatcher.py` the loop above. |
-| `game/` | Rules shared by commands and routes: `breeding`, `black_market`, `market`, `pvp`, `inventory`, `dragonarium`, `training`, `combat`, `map_items`, `levels`, `items`. |
-| `storage.py` | The only place that talks to the player collections and the config file. |
-| `enums.py` | `Command`, `SseEvent`, `SrvEndpoint`, `Resource`, `GroupType`, `DragonAttribute`, `DragonariumTab`, `OfferType`. |
+| `commands/` | `mod.rs` is the dispatcher and the command table; `ctx.rs` the `Ctx` handlers run with; `validation.rs` the argument checks; the handlers are grouped by theme (`economy`, `buildings`, `dragons`, `progress`, `battle`, `social`, `kompu`). |
+| `game/` | Rules shared by commands and routes: `breeding`, `black_market`, `market`, `pvp`, `inventory`, `dragonarium`, `training`, `combat`, `map_items`, `levels`. |
+| `storage.rs` | Player saves on top of the `PlayerStore` trait: locks, pending assists, normalization. |
+| `gamedata.rs` | The read-only game config and player template, loaded once. |
+| `db/` | The `AccountStore` / `PlayerStore` traits and their PostgreSQL, MongoDB and in-memory implementations. |
+| `enums.rs` | `Command` (with its wire names), `Resource`, group and attribute codes, `DragonariumTab`, the SSE messages. |
 | `routes/` | The original endpoints (`srv`, `packet`, `market`, `minigames`, game files, the web client). |
-| `api/` | The JSON API (`auth`, `admin`, `game`). |
+| `api/` | The JSON API (`auth`, `admin`, `friends`, `game`). |
 
 ## Design decisions
 

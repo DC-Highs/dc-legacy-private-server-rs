@@ -21,7 +21,7 @@ Out of scope: someone with access to the host, the databases or the `.env` file.
 
 | Problem | Fix |
 |---|---|
-| The player id came from the request (`USERID`, `id`, `user_id`, `fb_sig_user`): anyone could play, read or **delete** any account. | Identity comes only from the login session. Client-sent ids are ignored (`routes/srv.py`, `routes/packet.py`). |
+| The player id came from the request (`USERID`, `id`, `user_id`, `fb_sig_user`): anyone could play, read or **delete** any account. | Identity comes only from the login session. Client-sent ids are ignored (`routes/srv.rs`, `routes/packet.rs`). |
 | `user_id` was joined into a file path (`web/srv/<id>/`): `../` reached other directories and `/delete_profile` could `rmtree` them. | Saves live in MongoDB under an integer `_id`; there are no paths built from client input. `/delete_profile` is gone (admins delete users). |
 | `/delete_profile`, `/generate_pvp`, the market and minigame endpoints needed no login. | Every game endpoint requires a session; PvP generation is admin-only. |
 | Visiting an unknown neighbour created a new save for that id, and any player's save could be read by anyone. | Visiting is read-only and only possible for **friends** (404 otherwise), plus Deus, the system account the game shows to everybody. |
@@ -43,13 +43,13 @@ Out of scope: someone with access to the host, the databases or the `.env` file.
 - Request bodies are capped (1 MB; packets 256 KB); `NaN`/`Infinity` are rejected.
 - Admin API: admin-only, cannot disable, demote or delete yourself, search escapes `LIKE`
   wildcards, all fields are validated (unknown fields are refused: no mass assignment).
-- SQL injection: SQLAlchemy with bound parameters only. NoSQL injection: queries use integer
+- SQL injection: sqlx with bound parameters only. NoSQL injection: queries use integer
   ids from the session; client JSON is never used as a query, and `$`/`.` keys in client JSON
   are rejected before storage.
 
 ### Resource injection through `packet.php`
 
-Every command now validates its arguments (`commands/validation.py`): integers must be real
+Every command now validates its arguments (`commands/validation.rs`): integers must be real
 integers in a sane range (no strings, floats, booleans, huge numbers or objects), text is
 length-limited, ids must refer to things the player owns, and a packet is limited to 200
 commands of at most 16 arguments. A rejected command changes nothing; an unexpected error
@@ -97,7 +97,7 @@ rolls the whole command back (the save is restored from a snapshot).
 - **Known limit:** nothing stops one person from creating several accounts and befriending
   them to collect 5 × 5 gems per account. Sign-up is rate limited (3 per minute and 10 per hour
   per address), but if that matters, set `REGISTRATION_ENABLED=false` and create accounts by
-  hand, or lower `FRIEND_REWARD_LIMIT` in `src/friends.py`.
+  hand, or lower `FRIEND_REWARD_LIMIT` in `src/friends.rs`.
 
 ## What the server cannot verify
 
@@ -115,7 +115,7 @@ These are inherent to a client that simulates the game by itself:
 - **Habitat gold** is bounded by an estimate (coins per minute × elapsed time × 2) because the
   exact in-game formula is not known to the server. If legitimate collections are clipped, the
   server logs `claimed ... but at most ... was produced`; adjust `GOLD_TOLERANCE` in
-  `commands/collect.py`.
+  `commands/buildings.rs`.
 
 ## Operations checklist
 
@@ -125,4 +125,4 @@ These are inherent to a client that simulates the game by itself:
 - Set `REGISTRATION_ENABLED=false` if the server should not accept new sign-ups.
 - Watch the log for `Rejected ...` lines: repeated rejections from one player are a modified
   client (or a gap in the server that rejects something legitimate: please report it).
-- The `SECRET_KEY` in `config.py` signs game packets and ships inside the SWF; it is not a secret.
+- The `SECRET_KEY` in `config.rs` signs game packets and ships inside the SWF; it is not a secret.

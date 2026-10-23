@@ -13,8 +13,8 @@ recursos (o mesmo risco discutido na análise do script malicioso).
   Egg`, `group_type: MISTERY_EGG`) já existem na config, e a tabela `mistery_egg` já tem as
   recompensas e os pesos por tier. O comando só precisava ler essa tabela e sortear no servidor,
   igual ao padrão já usado em `deus_cards_claim` e `kompu_boxes_claim_prize`. Ver
-  `src/commands/mistery_egg_hatch.py` e `tests/test_mistery_egg.py`.
-- **`defensive_strategy_set`** — ao reler `set_attack_team.py`, percebi que ele já guarda times
+  `mistery_egg_hatch` em `src/commands/dragons.rs` e o teste em `tests/social.rs`.
+- **`defensive_strategy_set`** — ao reler `set_attack_team` (`src/commands/battle.rs`), percebi que ele já guarda times
   por `team_type` livre (`privateState.teams`, até 8 tipos) — ou seja, um time de defesa já
   poderia ser só mais um `team_type` dentro do comando que já existe, sem precisar de um comando
   novo. É possível que a string que minerei seja um nome de campo de configuração de combate da
@@ -50,7 +50,7 @@ save de **outro** jogador, o mesmo tipo de operação sensível que hoje só exi
   ou comida. A config tem `RESOURCES_MARKET_PER_ALLY` (`{g: 500, f: 50}`), que sugere uma fórmula
   de produção por aliado, mas não achei o comando que a cobraria nem a cadência (por tempo? por
   clique?), então nenhum recurso é concedido até isso ser confirmado. Ver
-  `src/commands/set_resource_allies.py` e `tests/test_set_resource_allies.py`.
+  `set_resource_allies` em `src/commands/social.rs` e os testes em `tests/social.rs`.
   - **Ressalva honesta**: o campo `name` do item 79 nesta captura da config é "Dragon Market",
     não "Allies Market". Confiei no nome do arquivo do sprite e no global `ALLIES_MARKET=79`
     por serem mais específicos, mas é uma discrepância real que vale conferir nos logs.
@@ -71,7 +71,7 @@ save de **outro** jogador, o mesmo tipo de operação sensível que hoje só exi
 
 ## Como cheguei nisso
 
-Comparei os 59 comandos já implementados (`src/enums.py` `Command`) contra os nomes extraídos do
+Comparei os 59 comandos já implementados (`src/enums.rs` `Command`) contra os nomes extraídos do
 `Base_sec_1.0.1.swf` que seguem o padrão de verbo de ação (`buy_`, `collect_`, `set_`, etc.). Achei
 ~98 candidatos novos.
 
@@ -96,7 +96,7 @@ parcial no save ou na config.
   `collect_game_probabilities`. É um subsistema inteiro ainda não coberto, do tamanho de um recurso
   novo (tipo "caça ao tesouro").
 - **Social**: `create_message`, `place_gift`, `set_resource_allies` — ligados ao sistema de
-  vizinhos/allies, que já existe parcialmente (`assist_neighbor`, `friends.py`).
+  vizinhos/allies, que já existe parcialmente (`assist_neighbor`, `friends.rs`).
 - `finish_si`, `buy_si_help` — "si" provavelmente é "speed-up item" ou similar; aparecem perto de
   `daily_item_cooldown_time`.
 
@@ -119,7 +119,7 @@ dia fosse ligado.
 
 O jeito confiável de montar o roadmap de verdade é observar os logs em produção: o dispatcher já
 registra `"Command %s is not implemented, answering with a generic ok"` para cada comando
-desconhecido (`src/commands/dispatcher.py:81`). Rodando:
+desconhecido (`src/commands/mod.rs`, `dispatch_commands`). Rodando:
 
 ```bash
 docker compose logs -f app | grep "is not implemented"

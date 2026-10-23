@@ -27,7 +27,7 @@ neighbours bar and *Visit* opens their island. How the client uses neighbours is
 - **Data:** `friendships` already has `requester_id`, `status` (`pending` / `accepted`),
   `created_at` and `responded_at`, with the pair stored once. The request flow only needs to
   create `pending` rows and flip them to `accepted` (the game ignores anything not accepted).
-- **API** (`api/friends.py`, login required, same CSRF/rate-limit rules as the rest):
+- **API** (`api/friends.rs`, login required, same CSRF/rate-limit rules as the rest):
   - `POST /api/friends/requests` `{playerId}` – send a request (rate-limited; reject unknown
     ids, yourself, existing friends and duplicate or reverse pending requests; if the other
     player already asked you, accept instead).

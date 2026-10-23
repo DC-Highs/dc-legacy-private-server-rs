@@ -7,8 +7,7 @@
 Adobe Flash version of Dragon City (2012–2020), kept alive by the community.
 
 [![Status](https://img.shields.io/badge/Status-In_Development-orange)]()
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)]()
-[![Flask](https://img.shields.io/badge/Flask-Server-lightgrey)]()
+[![Rust](https://img.shields.io/badge/Rust-axum%20%2B%20tokio-orange.svg)]()
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)]()
 [![Commands](https://img.shields.io/badge/Commands_Implemented-60%2F104-yellow)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -52,6 +51,9 @@ Flash game in the browser with [Ruffle](https://ruffle.rs/).
   Friends page; friends become neighbours in the game (visit their island, help them), and both
   get 5 gems for each of their first 5 friends.
 - **Storage:** accounts and sessions in PostgreSQL, each player's save in MongoDB.
+- **Fast:** one async Rust binary (axum + tokio): no interpreter, no GIL, a few MB of RAM, and
+  the hot paths (game config, sessions, the player lock) are served from memory. Numbers are in
+  [docs/architecture.md](docs/architecture.md#performance).
 - **Hardened:** the client is treated as untrusted; every command is validated server-side.
   See [docs/SECURITY.md](docs/SECURITY.md).
 - **Docker:** `docker compose up` runs everything, on your PC or on a VPS.
@@ -108,7 +110,7 @@ Open <http://localhost:8080>, create an account and play. If you set `ADMIN_EMAI
 `ADMIN_PASSWORD`, that administrator is created on start-up; otherwise create one with:
 
 ```bash
-docker compose exec app python -m src create-admin --email you@example.com --password '...'
+docker compose exec app /app/dragon-city create-admin --email you@example.com --password '...'
 ```
 
 Running it on a server? Read [docs/deployment.md](docs/deployment.md): put an HTTPS reverse
@@ -137,19 +139,21 @@ proxy in front of it and set `COOKIE_SECURE=true` and `TRUST_PROXY=true`.
 
 ```
 src/
-├── cli.py, wsgi.py     # command line (migrate, create-admin, ...) and the gunicorn entry point
-├── app.py              # Flask application factory
-├── config.py           # settings read from environment variables
-├── db/                 # SQLAlchemy models (PostgreSQL) and MongoDB access
+├── main.rs, lib.rs     # command line (serve, migrate, create-admin, seed, healthcheck)
+├── app.rs              # router, start-up tasks, in-memory application for the tests
+├── config.rs           # settings read from environment variables
+├── db/                 # the store traits; PostgreSQL, MongoDB and in-memory implementations
 ├── auth/               # Argon2id passwords, sessions, CSRF/origin checks
-├── api/                # JSON API: auth, admin, game bootstrap
-├── commands/           # one module per packet.php command, plus argument validation
+├── api/                # JSON API: auth, admin, friends, game bootstrap
+├── commands/           # the packet.php commands (grouped by theme), dispatcher, validation
 ├── game/               # rules: breeding, black market, market, PvP, dragonarium...
 ├── routes/             # the original game's endpoints and the game files
-└── migrations/         # PostgreSQL migrations (Alembic)
+├── storage.rs          # player saves: locks, pending assists, normalization
+└── friends.rs, ...     # friendships, game versions, Deus, packet signing
+migrations/             # PostgreSQL migrations (sqlx)
 frontend/               # web client (Vite, React, shadcn/ui)
-docker/                 # container entrypoint and gunicorn settings
-tests/                  # pytest suite (SQLite + mongomock, no Docker needed)
+tests/                  # integration tests (in-memory stores, no Docker needed)
+examples/bench.rs       # load generator
 web/srv/                # read-only seed data: game config, player template, PvP opponents
 docs/                   # documentation
 ```
@@ -169,7 +173,7 @@ docs/                   # documentation
 
 ## License
 
-The server source code (`src/`, `frontend/`, `docker/`, `tests/`, `docs/`) is under the
+The server source code (`src/`, `frontend/`, `migrations/`, `tests/`, `docs/`) is under the
 [MIT License](LICENSE).
 
 The original game assets (`.swf`, images, audio) are **not** covered by that license: they

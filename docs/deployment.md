@@ -6,7 +6,7 @@
 
 | Service | Image | Role |
 |---|---|---|
-| `app` | built from the `Dockerfile` | The Flask server (gunicorn) and the web client. Published on `APP_PORT`. |
+| `app` | built from the `Dockerfile` | The Rust server (`dragon-city`, a distroless image) and the web client. Published on `APP_PORT`. |
 | `postgres` | `postgres:16-alpine` | Accounts and login sessions. |
 | `mongo` | `mongo:7` | Each player's save, PvP opponents, queued assists. |
 
@@ -15,8 +15,8 @@ named volumes `postgres-data` and `mongo-data`.
 
 On start-up the `app` container:
 
-1. waits for PostgreSQL and applies the migrations (`python -m src migrate`);
-2. starts gunicorn;
+1. waits for PostgreSQL and MongoDB and applies the migrations (`dragon-city serve` does it);
+2. starts listening on `BIND_ADDR`;
 3. creates the MongoDB indexes, imports the bundled PvP opponents if the database is empty,
    creates the bootstrap administrator from `ADMIN_EMAIL`/`ADMIN_PASSWORD` (if set), and
    removes expired sessions.
@@ -73,10 +73,10 @@ If you want to publish only to the proxy, change the port mapping in `compose.ya
 
 ### 3. One process only
 
-The app runs **one gunicorn worker** on purpose (`docker/gunicorn.conf.py`): the live-save
-notifications, the per-player locks and the rate limiter live in process memory. Concurrency
-comes from 128 threads; each open game tab holds one thread for its event stream. Do not run
-several replicas behind a load balancer. If you ever need to scale, those three things must
+The app runs **one process** on purpose: the live-save notifications, the per-player locks, the
+rate limiter and the login cache live in process memory. Concurrency is not a problem: the async
+runtime spreads the work over every core, and an open game tab costs one small task for its event
+stream, not a thread. Do not run several replicas behind a load balancer. If you ever need to scale, those three things must
 first move to a shared store (for example Redis).
 
 ### 4. Firewall
@@ -91,7 +91,7 @@ databases should not be exposed publicly.
 - If you did not set `ADMIN_EMAIL`/`ADMIN_PASSWORD`, create an administrator:
 
   ```bash
-  docker compose exec app python -m src create-admin --email you@example.com --password '...'
+  docker compose exec app /app/dragon-city create-admin --email you@example.com --password '...'
   ```
 
   `ADMIN_PASSWORD` stays in `.env`; change the password in the panel after the first login and

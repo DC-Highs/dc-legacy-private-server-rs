@@ -9,39 +9,44 @@ COPY frontend/ ./
 RUN npm run build
 
 # --- server -------------------------------------------------------------------
-FROM python:3.12-slim AS app
+FROM rust:1-bookworm AS build
+WORKDIR /src
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1
+# Build the dependencies first, so editing the sources does not rebuild them.
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && touch src/lib.rs \
+    && cargo build --release --bin dragon-city \
+    && rm -rf src
 
-RUN pip install "poetry>=2.1,<3" \
-    && useradd --create-home --uid 10001 dragon
+COPY migrations ./migrations
+COPY src ./src
+# Cargo compares file times: make sure the real sources count as newer than the placeholders.
+RUN touch src/main.rs src/lib.rs && cargo build --release --bin dragon-city
+
+# --- runtime ------------------------------------------------------------------
+# No shell, no package manager: just the binary and the game data it needs.
+FROM gcr.io/distroless/cc-debian12:nonroot AS app
 
 WORKDIR /app
-COPY pyproject.toml poetry.lock README.md LICENSE ./
-COPY src ./src
-RUN poetry install --only main
+COPY --from=build /src/target/release/dragon-city /app/dragon-city
 
 # Game data: the config/template/PvP seeds are small and baked in; the Flash files, the
 # assets (hundreds of MB) and the mapped domains are mounted by compose.yaml.
 COPY web/srv /app/seed
 COPY --from=web /web/dist /app/frontend/dist
-COPY docker/entrypoint.sh docker/gunicorn.conf.py /app/docker/
-RUN chmod +x /app/docker/entrypoint.sh
 
 ENV SEED_DIR=/app/seed \
     FRONTEND_DIST=/app/frontend/dist \
     FLASH_DIR=/data/flash \
     ASSETS_DIR=/data/assets \
     DOMAIN_MAP_DIR=/data/domains \
+    BIND_ADDR=0.0.0.0:8080 \
     TRUST_PROXY=false
 
-USER dragon
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/api/game/health', timeout=4)"
+    CMD ["/app/dragon-city", "healthcheck"]
 
-ENTRYPOINT ["/app/docker/entrypoint.sh"]
+# `serve` waits for the databases and applies the migrations before listening.
+ENTRYPOINT ["/app/dragon-city"]
+CMD ["serve"]

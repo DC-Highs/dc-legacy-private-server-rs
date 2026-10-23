@@ -19,7 +19,7 @@ For the JSON API of the web client see [api.md](api.md).
 | other `/static/dragoncity/srv/<name>` | login | `{"result": "200"}`. |
 
 Responses that carry data are signed: `HMAC-SHA256(SECRET_KEY, json)` as hex, then `;`, then the
-compact JSON. The key is in `config.py`; it ships inside the SWF.
+compact JSON. The key is in `config.rs`; it ships inside the SWF.
 
 ## Neighbours
 
@@ -48,7 +48,7 @@ refused for anyone who is not a friend.
 
 **Deus.** The "Deus" card in the neighbours bar belongs to the client: it visits the fixed player
 id `100000030` (`DEUS_PLAYER_ID`). If nothing answers, the game stays on a loading bar forever.
-The server therefore keeps a system account and a save for Deus (`system_accounts.py`, created
+The server therefore keeps a system account and a save for Deus (`system_accounts.rs`, created
 at start-up) that **every** player may visit, friends or not. Deus cannot log in (the account is
 disabled and has an unknown password), cannot be befriended, does not appear in `neighbors`, and
 administrators cannot edit or delete him.
@@ -92,7 +92,7 @@ Response:
 ## Commands
 
 60 of the 104 commands the client can send are implemented; the rest get the generic `ok`. Each
-lives in `src/commands/<name>.py`. Arguments are listed in order. "Needs" is what
+lives in a handler in `src/commands/` (grouped by theme: `economy`, `buildings`, `dragons`, `progress`, `battle`, `social`, `kompu`). Arguments are listed in order. "Needs" is what
 the server checks before changing anything.
 
 ### Buildings and the map
@@ -191,5 +191,5 @@ the server checks before changing anything.
 |---|---|---|
 | `sync`, `ping` | – | Keep-alive; nothing changes. |
 
-> The authoritative list is the `Command` enum in `src/enums.py`; the exact rules
+> The authoritative list is the `commands!` list in `src/enums.rs`; the exact rules
 > are in each command module.
